@@ -1,0 +1,35 @@
+###
+post  http://localhost:3009/
+Content-Type: application/json 
+
+{
+    "date":"2010-04-10",
+    "number":1,
+    "amount":1000,
+    "id":"1"
+
+}
+
+
+###
+get http://localhost:3009/invoices
+
+
+###
+put  http://localhost:3009/1
+Content-Type: application/json 
+
+{
+    "date":"2020-10-20",
+    "number":20,
+    "amount":2000,
+    "id":"01"
+
+}
+
+###
+delete http://localhost:3009/5
+
+
+###
+get http://localhost:3009/filter?financialYear=2022-23&invoiceNumber=1&startDate=2022-07-01&endDate=2022-07-31
