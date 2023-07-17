@@ -23,11 +23,20 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`))
 
 // Enter new invoice details
 app.post("/", async (req, res) => {
-    const { date, number, amount, id } = req.body
+    const { date, number, amount, id } = req.body;
     try {
-        const existingInvoice = await Invoice.findOne({ number })
+        const existingInvoice = await Invoice.findOne({ number });
         if (existingInvoice) {
-            return res.status(400).json({ error: 'Invoice number already exists for a different financial year.' });
+            const existingFinancialYear = getFinancialYear(existingInvoice.date);
+            const newFinancialYear = getFinancialYear(date);
+            console.log('ex')
+            console.log(newFinancialYear,'new')
+            if (existingFinancialYear === newFinancialYear) {
+                return res.status(400).json({ error: 'Invoice number already exists for the same financial year.' });
+            }
+            else{
+                res.json(invoices)
+            }
         }
         const previousInvoice = await Invoice.findOne({ number: number - 1 });
         const nextInvoice = await Invoice.findOne({ number: number + 1 });
@@ -49,15 +58,13 @@ app.post("/", async (req, res) => {
         await newInvoice.save();
         const invoices = await Invoice.find();
         res.json(invoices);
-
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err.message);
         res.status(500).json({ error: 'Internal server error.' });
     }
+});
 
 
-})
 // Get all invoices stored in the db
 app.get('/invoices', async (req, res) => {
     try {
@@ -112,10 +119,17 @@ app.delete('/:number', async (req, res) => {
     }
 });
 
-// Filter API - Get invoices based on filters
 
 
 function getFinancialYear(date) {
+    const dates = new Date(date);
+    const currentYear = dates.getFullYear();
+    const nextYear = currentYear + 1;
+    const fiscalYear = `${currentYear}-${nextYear.toString().slice(-2)}`;
+    return fiscalYear;
+}
+
+function getExtingYear(date) {
     const dates = new Date(date);
     const currentYear = dates.getFullYear();
     const nextYear = currentYear + 1;
