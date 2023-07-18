@@ -8,8 +8,6 @@ app.use(cors())
 
 
 
-
-
 mongoose.connect('mongodb+srv://bhagyashree:bhagya5799@cluster0.q2xpdj1.mongodb.net/?retryWrites=true&w=majority').then(
     () => console.log("DB Connected .....!")
 ).catch(err => console.log(err, "DB"))
@@ -18,56 +16,30 @@ app.get('/', (req, res) => {
     res.send('Hello world welcome  !!!')
 })
 
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+    console.log('Connected to MongoDB');
+});
+
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
 
 
+
+const getFinancialYear = (date) => {
+    const parsedDate = new Date(date);
+    const year = parsedDate.getFullYear();
+    const month = parsedDate.getMonth();
+    const financialYearStart = month >= 3 ? year : year - 1;
+    const financialYearEnd = financialYearStart + 1;
+    return `${financialYearStart}-${financialYearEnd}`;
+};
+
 // Enter new invoice details
-// app.post("/", async (req, res) => {
-//     const { date, number, amount, id } = req.body;
-//     try {
-//         const existingInvoice = await Invoice.findOne({ number });
-//         if (existingInvoice) {
-//             const existingFinancialYear = getFinancialYear(existingInvoice.date);
-//             const newFinancialYear = getFinancialYear(date);
-//             console.log('ex')
-//             console.log(newFinancialYear,'new')
-//             if (existingFinancialYear === newFinancialYear) {
-//                 return res.status(400).json({ error: 'Invoice number already exists for the same financial year.' });
-//             }
-//             else{
-//                 res.json(invoices)
-//             }
-//         }
-//         const previousInvoice = await Invoice.findOne({ number: number - 1 });
-//         const nextInvoice = await Invoice.findOne({ number: number + 1 });
-
-//         if (
-//             (previousInvoice && date < previousInvoice.date) ||
-//             (nextInvoice && date > nextInvoice.date)
-//         ) {
-//             return res.status(400).json({ error: 'Invoice date is not within the valid range.' });
-//         }
-
-//         let newInvoice = new Invoice({
-//             date,
-//             number,
-//             amount,
-//             id,
-//             FinancialYear: getFinancialYear(date)
-//         });
-//         await newInvoice.save();
-//         const invoices = await Invoice.find();
-//         res.json(invoices);
-//     } catch (err) {
-//         console.log(err.message);
-//         res.status(500).json({ error: 'Internal server error.' });
-//     }
-// });
-
-app.post('/invoices', async (req, res) => {
+app.post('/', async (req, res) => {
     try {
         const { date, number, amount } = req.body;
-
         // Check if the invoice number already exists for the same financial year
         const existingInvoice = await Invoice.findOne({ number });
         if (existingInvoice) {
@@ -78,11 +50,11 @@ app.post('/invoices', async (req, res) => {
                 return res.status(400).json({ error: 'Invoice number already exists for the same financial year.' });
             }
         }
-
         // Check if the invoice date is within the valid range
-        const previousInvoice = await Invoice.findOne({ number: number - 1 });
-        const nextInvoice = await Invoice.findOne({ number: number + 1 });
-
+        const previousInvoice = await Invoice.findOne({ number: { $lte: number } });
+        const nextInvoice = await Invoice.findOne({ number: { $gte: number } });
+        // findOne({ code: { $lte: 3 } })
+        // findOne({ code: { $gte: 3 } })
         if (
             (previousInvoice && date <= previousInvoice.date) ||
             (nextInvoice && date >= nextInvoice.date)
@@ -109,6 +81,9 @@ app.post('/invoices', async (req, res) => {
 
 
 
+
+
+
 // Get all invoices stored in the db
 app.get('/invoices', async (req, res) => {
     try {
@@ -124,7 +99,7 @@ app.get('/invoices', async (req, res) => {
 app.put('/:number', async (req, res) => {
     const { number } = req.params;
     const { date, amount } = req.body;
-    console.log(number)
+
     try {
         const invoice = await Invoice.findOne();
         console.log(invoice)
@@ -146,7 +121,7 @@ app.put('/:number', async (req, res) => {
 // Delete a specific invoice based on invoice number
 app.delete('/:number', async (req, res) => {
     const { number } = req.params;
-    console.log(number)
+
 
     try {
         console.log(number)
@@ -162,22 +137,6 @@ app.delete('/:number', async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
-
-// function getFinancialYear(date) {
-//     const dates = new Date(date);
-//     const currentYear = dates.getFullYear();
-//     const nextYear = currentYear + 1;
-//     const fiscalYear = `${currentYear}-${nextYear.toString().slice(-2)}`;
-//     return fiscalYear;
-// }
-const getFinancialYear = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const financialYearStart = month >= 3 ? year : year - 1;
-    const financialYearEnd = financialYearStart + 1;
-    return `${financialYearStart}-${financialYearEnd}`;
-};
-
 
 function getExtingYear(date) {
     const dates = new Date(date);
