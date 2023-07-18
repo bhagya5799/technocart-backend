@@ -119,8 +119,6 @@ app.delete('/:number', async (req, res) => {
     }
 });
 
-
-
 function getFinancialYear(date) {
     const dates = new Date(date);
     const currentYear = dates.getFullYear();
@@ -128,6 +126,7 @@ function getFinancialYear(date) {
     const fiscalYear = `${currentYear}-${nextYear.toString().slice(-2)}`;
     return fiscalYear;
 }
+
 
 function getExtingYear(date) {
     const dates = new Date(date);
